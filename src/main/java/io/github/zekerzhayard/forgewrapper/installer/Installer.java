@@ -9,9 +9,11 @@ import net.minecraftforge.installer.actions.ProgressCallback;
 import net.minecraftforge.installer.json.Install;
 import net.minecraftforge.installer.json.InstallV1;
 import net.minecraftforge.installer.json.Util;
+import net.minecraftforge.installer.SimpleInstaller;
 
 public class Installer {
     public static boolean install(File libraryDir, File minecraftJar, File installerJar) {
+        SimpleInstaller.headless = true;
         AbstractInstaller installer = createInstaller();
         ProgressCallback monitor = ProgressCallback.withOutputs(System.out);
         Install profile = installer.loadInstallProfile();
