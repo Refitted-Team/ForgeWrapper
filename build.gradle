@@ -11,7 +11,7 @@ compileJava {
     sourceCompatibility = targetCompatibility = 1.8
 }
 
-version = "${fw_version}${-> getVersionSuffix()}"
+version = "${fw_version}"
 group = "io.github.zekerzhayard"
 archivesBaseName = rootProject.name
 
