@@ -30,7 +30,7 @@ public class LexForgeModLoader extends AbstractModProvider implements IModLocato
         Path path;
         if (Main.coreModsOnly) {
             path = file.getParentFile().getParentFile().toPath()
-                    .resolve("shared/lexforge/"+Main.mcVersion+"/mods/vivecraft/");
+                    .resolve("shared/lexforge/"+Main.mcVersion+"/mods/core/");
         } else {
             path = file.getParentFile().getParentFile().toPath()
                     .resolve("shared/lexforge/"+Main.mcVersion+"/mods/");
