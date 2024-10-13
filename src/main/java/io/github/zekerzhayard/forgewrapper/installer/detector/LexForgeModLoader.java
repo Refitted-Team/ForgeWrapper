@@ -9,6 +9,7 @@ import net.minecraftforge.forgespi.locating.IModLocator;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -26,16 +27,7 @@ public class LexForgeModLoader extends AbstractModProvider implements IModLocato
     }
 
     private static Path getDirectoryRequired() {
-        File file = new File(Main.gameDir);
-        Path path;
-        if (Main.coreModsOnly) {
-            path = file.getParentFile().getParentFile().toPath()
-                    .resolve("shared/lexforge/"+Main.mcVersion+"/mods/vivecraft/");
-        } else {
-            path = file.getParentFile().getParentFile().toPath()
-                    .resolve("shared/lexforge/"+Main.mcVersion+"/mods/");
-        }
-        return path;
+        return new File(Main.modDirectory).toPath();
     }
 
     LexForgeModLoader(Path modFolder, String name) {
@@ -48,8 +40,10 @@ public class LexForgeModLoader extends AbstractModProvider implements IModLocato
         LOGGER.debug(LogMarkers.SCAN, "Scanning mods dir {} for mods", this.modFolder);
         var excluded = ModDirTransformerDiscoverer.allExcluded();
         try {
-            var ret = new ArrayList<ModFileOrException>();
-            var files = Files.list(this.modFolder).toList();
+            List<ModFileOrException> ret = new ArrayList<ModFileOrException>();
+            List<Path> files = new ArrayList<>();
+            listAllFiles(this.modFolder, files);
+
             for (var file : files) {
                 var name = file.getFileName().toString().toLowerCase(Locale.ROOT);
                 if (excluded.contains(file) || !name.endsWith(SUFFIX))
@@ -80,5 +74,17 @@ public class LexForgeModLoader extends AbstractModProvider implements IModLocato
     @Override
     public String toString() {
         return "{"+customName+" locator at "+this.modFolder+"}";
+    }
+
+    private static void listAllFiles(Path currentPath, List<Path> allFiles) throws IOException {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(currentPath)) {
+            for (Path entry : stream) {
+                if (Files.isDirectory(entry)) {
+                    listAllFiles(entry, allFiles);
+                } else {
+                    allFiles.add(entry);
+                }
+            }
+        }
     }
 }

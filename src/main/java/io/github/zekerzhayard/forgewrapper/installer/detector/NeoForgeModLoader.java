@@ -16,8 +16,10 @@ import org.slf4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -34,16 +36,7 @@ public class NeoForgeModLoader implements IModFileCandidateLocator {
     }
 
     private static Path getDirectoryRequired() {
-        File file = new File(Main.gameDir);
-        Path path;
-        if (Main.coreModsOnly) {
-            path = file.getParentFile().getParentFile().toPath()
-                    .resolve("shared/neoforge/"+Main.mcVersion+"/mods/core/");
-        } else {
-            path = file.getParentFile().getParentFile().toPath()
-                    .resolve("shared/neoforge/"+Main.mcVersion+"/mods/");
-        }
-        return path;
+        return new File(Main.modDirectory).toPath();
     }
 
     NeoForgeModLoader(Path modFolder) {
@@ -59,28 +52,14 @@ public class NeoForgeModLoader implements IModFileCandidateLocator {
     public void findCandidates(ILaunchContext context, IDiscoveryPipeline pipeline) {
         LOGGER.debug(LogMarkers.SCAN, "Scanning mods dir {} for mods", this.modFolder);
 
-        List<Path> directoryContent;
-        if (!Main.coreModsOnly) {
-            try (var files = Stream.concat(Files.list(this.modFolder), Files.list(this.modFolder.getParent()))) {
-                directoryContent = files
-                        .filter(p -> StringUtils.toLowerCase(p.getFileName().toString()).endsWith(SUFFIX))
-                        .sorted(Comparator.comparing(path -> StringUtils.toLowerCase(path.getFileName().toString())))
-                        .toList();
-            } catch (UncheckedIOException | IOException e) {
-                throw new ModLoadingException(ModLoadingIssue.error("fml.modloadingissue.failed_to_list_folder_content", this.modFolder).withAffectedPath(this.modFolder).withCause(e));
-            }
-        } else {
-            try (var files = Files.list(this.modFolder)) {
-                directoryContent = files
-                        .filter(p -> StringUtils.toLowerCase(p.getFileName().toString()).endsWith(SUFFIX))
-                        .sorted(Comparator.comparing(path -> StringUtils.toLowerCase(path.getFileName().toString())))
-                        .toList();
-            } catch (UncheckedIOException | IOException e) {
-                throw new ModLoadingException(ModLoadingIssue.error("fml.modloadingissue.failed_to_list_folder_content", this.modFolder).withAffectedPath(this.modFolder).withCause(e));
-            }
+        List<Path> files = new ArrayList<>();
+        try {
+            listAllFiles(this.modFolder, files);
+        } catch (IOException e) {
+            throw new ModLoadingException(ModLoadingIssue.error("fml.modloadingissue.failed_to_list_folder_content", this.modFolder).withAffectedPath(this.modFolder).withCause(e));
         }
 
-        for (var file : directoryContent) {
+        for (var file : files.stream().filter(path -> path.endsWith(SUFFIX)).toList()) {
             if (!Files.isRegularFile(file)) {
                 pipeline.addIssue(ModLoadingIssue.warning("fml.modloadingissue.brokenfile.unknown").withAffectedPath(file));
                 continue;
@@ -93,5 +72,17 @@ public class NeoForgeModLoader implements IModFileCandidateLocator {
     @Override
     public String toString() {
         return "{" + customName + " locator at " + this.modFolder + "}";
+    }
+
+    private static void listAllFiles(Path currentPath, List<Path> allFiles) throws IOException {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(currentPath)) {
+            for (Path entry : stream) {
+                if (Files.isDirectory(entry)) {
+                    listAllFiles(entry, allFiles);
+                } else {
+                    allFiles.add(entry);
+                }
+            }
+        }
     }
 }

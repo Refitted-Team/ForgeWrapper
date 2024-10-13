@@ -16,20 +16,19 @@ import io.github.zekerzhayard.forgewrapper.installer.util.ModuleUtil;
 public class Main {
     public static String mcVersion; // DL: Make Minecraft version public
     public static String gameDir; // DL: Grant access to the game directory
-    public static boolean coreModsOnly;
+    public static String modDirectory;
 
     public static void main(String[] args) throws Throwable {
         // --fml.neoForgeVersion 20.2.20-beta --fml.fmlVersion 1.0.2 --fml.mcVersion 1.20.2 --fml.neoFormVersion 20231019.002635 --launchTarget forgeclient
 
-        List<String> argsList = Stream.of(args).collect(Collectors.toList());
+        List<String> argsList = Stream.of(args).toList();
 
         gameDir = argsList.get(argsList.indexOf("--gameDir") + 1); // DL: Grant access to the game directory
 
         // NOTE: this is only true for NeoForge versions past 20.2.x
         // early versions of NeoForge (for 1.20.1) are not supposed to be covered here
         boolean isNeoForge = argsList.contains("--fml.neoForgeVersion");
-        coreModsOnly = argsList.contains("--coreModsOnly");
-        if (coreModsOnly) System.out.println("Running with only core DL mods! This is not suggested.");
+        modDirectory = System.getProperty("fabric.addMods");
 
         mcVersion = argsList.get(argsList.indexOf("--fml.mcVersion") + 1); // DL: Make Minecraft version public
         String forgeGroup = argsList.contains("--fml.forgeGroup") ? argsList.get(argsList.indexOf("--fml.forgeGroup") + 1) : "net.neoforged";
