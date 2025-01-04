@@ -16,9 +16,6 @@ group = "io.github.zekerzhayard"
 archivesBaseName = rootProject.name
 
 configurations {
-    provided {
-        implementation.extendsFrom provided
-    }
     multirelase {
         implementation.extendsFrom multirelase
     }
@@ -53,12 +50,6 @@ dependencies {
     compileOnly "net.minecraftforge:fmlloader:1.21.1-52.0.4@jar"
     compileOnly "net.sf.jopt-simple:jopt-simple:5.0.4"
 
-    compileOnly "net.neoforged.fancymodloader:loader:4.0.27"
-    compileOnly "net.neoforged.fancymodloader:core:2.0.7"
-    compileOnly "net.neoforged.fancymodloader:spi:3.0.9"
-
-    provided project(":common")
-    provided project(":legacy")
     multirelase project(":jigsaw")
 }
 
@@ -79,10 +70,6 @@ jar {
         "Multi-Release": "true",
         "GitCommit": String.valueOf(System.getenv("GITHUB_SHA"))
     ])
-
-    from configurations.provided.files.collect {
-        zipTree(it)
-    }
 
     into "META-INF/versions/9", {
         from configurations.multirelase.files.collect {
